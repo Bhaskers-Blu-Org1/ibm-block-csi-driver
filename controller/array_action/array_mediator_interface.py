@@ -55,6 +55,31 @@ class ArrayMediator(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def copy_to_existing_volume_from_snapshot(self, name, src_snap_name, src_snap_capacity_in_bytes,
+                                              min_vol_size_in_bytes, pool=None):
+        """
+        This function should create a volume from snapshot in the storage system.
+
+        Args:
+            name                         : name of the volume to be created in the storage system
+            src_snap_name                : name of snapshot to create from
+            src_snap_capacity_in_bytes   : capacity of snapshot to create from
+            min_vol_size_in_bytes        : if snapshot capacity is lower than this value vol will
+                                           be increased to this value
+            pool: pool of the volume and snapshot to find them more efficiently.
+
+        Returns:
+            Volume
+
+        Raises:
+            VolumeNotFoundError
+            SnapshotNotFoundError
+            IllegalObjectName
+            PermissionDenied
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_volume(self, volume_id):
         """
         This function should delete a volume in the storage system.
@@ -102,6 +127,20 @@ class ArrayMediator(ABC):
            volume name
         Raises:
             VolumeNotFound
+            IllegalObjectID
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def is_volume_has_snapshots(self, volume_id):
+        """
+        Args:
+           volume_id : volume id
+        Returns:
+           Is volume has snapshots
+        Raises:
+            VolumeNotFound
+            IllegalObjectID
         """
         raise NotImplementedError
 
@@ -165,11 +204,12 @@ class ArrayMediator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_snapshot(self, snapshot_name):
+    def get_snapshot(self, snapshot_name, volume_context=None):
         """
         This function return snapshot info about the snapshot.
         Args:
             snapshot_name : name of the snapshot in the storage system
+            volume_context: context of the volume to find the snapshot more efficiently.
         Returns:
            Snapshot
         Raises:
@@ -180,18 +220,46 @@ class ArrayMediator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def create_snapshot(self, name, volume_name):
+    def get_snapshot_by_id(self, snapshot_id):
+        """
+        This function return snapshot info about the snapshot.
+        Args:
+            snapshot_id : id of the snapshot in the storage system
+        Returns:
+           Snapshot
+        Raises:
+            SnapshotIdBelongsToVolumeError
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def create_snapshot(self, name, volume_name, volume_context=None):
         """
         This function should create a snapshot from volume in the storage system.
         Args:
             name           : name of the snapshot to be created in the storage system
             volume_name    : name of the volume to be created from
+            volume_context: context of the volume to find the snapshot more efficiently.
         Returns:
             Snapshot
         Raises:
             SnapshotAlreadyExists
             VolumeNotFound
             IllegalObjectName
+            PermissionDenied
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete_snapshot(self, snapshot_id):
+        """
+        This function should delete a snapshot in the storage system.
+        Args:
+            snapshot_id : wwn of the snapshot to delete
+        Returns:
+            None
+        Raises:
+            SnapshotNotFound
             PermissionDenied
         """
         raise NotImplementedError
@@ -250,6 +318,14 @@ class ArrayMediator(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def is_active(self):
+        """
+        This function will return True if the storage connection is still active.
+
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def validate_supported_capabilities(self, capabilities):
         """
         This function will check if the capabilities passed to the create volume are valid
@@ -262,6 +338,14 @@ class ArrayMediator(ABC):
 
         Raises:
             CapabilityNotSupported
+        """
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def identifier(self):
+        """
+        The storage system identifier.
         """
         raise NotImplementedError
 
